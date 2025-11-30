@@ -11,5 +11,7 @@ public partial class Instruction
 
     public string Text { get; set; } = null!;
 
+    public int SequenceNumber { get; set; }
+
     public virtual Recipe Recipe { get; set; } = null!;
 }

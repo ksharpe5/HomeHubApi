@@ -11,5 +11,7 @@ public class MappingProfile : Profile
         CreateMap<Recipe, RecipeDto>().ReverseMap();
         CreateMap<Ingredient, IngredientDto>().ReverseMap();
         CreateMap<Instruction, InstructionDto>().ReverseMap();
+        
+        CreateMap<TapoDevice, TapoDeviceDto>().ReverseMap();
     }
 }

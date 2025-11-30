@@ -11,9 +11,11 @@ public partial class Ingredient
 
     public string Name { get; set; } = null!;
 
-    public int Quantity { get; set; }
+    public float Quantity { get; set; }
 
-    public string Unit { get; set; } = null!;
+    public int Unit { get; set; }
+
+    public int SequenceNumber { get; set; }
 
     public virtual Recipe Recipe { get; set; } = null!;
 }

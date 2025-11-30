@@ -25,6 +25,8 @@ public partial class HomeHubContext : DbContext
 
     public virtual DbSet<Recipe> Recipes { get; set; }
 
+    public virtual DbSet<TapoDevice> TapoDevices { get; set; }
+
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
 #warning To protect potentially sensitive information in your connection string, you should move it out of source code. You can avoid scaffolding the connection string by using the Name= syntax to read it from configuration - see https://go.microsoft.com/fwlink/?linkid=2131148. For more guidance on storing connection strings, see https://go.microsoft.com/fwlink/?LinkId=723263.
         => optionsBuilder.UseMySql("server=192.168.2.139;database=HomeHub;user=pi;password=Bhu8Nji9Mko0", Microsoft.EntityFrameworkCore.ServerVersion.Parse("11.8.3-mariadb"));
@@ -61,9 +63,9 @@ public partial class HomeHubContext : DbContext
 
             entity.Property(e => e.Id).HasColumnType("int(11)");
             entity.Property(e => e.Name).HasMaxLength(255);
-            entity.Property(e => e.Quantity).HasColumnType("int(11)");
             entity.Property(e => e.RecipeId).HasColumnType("int(11)");
-            entity.Property(e => e.Unit).HasMaxLength(255);
+            entity.Property(e => e.SequenceNumber).HasColumnType("int(11)");
+            entity.Property(e => e.Unit).HasColumnType("int(11)");
 
             entity.HasOne(d => d.Recipe).WithMany(p => p.Ingredients)
                 .HasForeignKey(d => d.RecipeId)
@@ -80,6 +82,7 @@ public partial class HomeHubContext : DbContext
 
             entity.Property(e => e.Id).HasColumnType("int(11)");
             entity.Property(e => e.RecipeId).HasColumnType("int(11)");
+            entity.Property(e => e.SequenceNumber).HasColumnType("int(11)");
             entity.Property(e => e.Text).HasMaxLength(255);
 
             entity.HasOne(d => d.Recipe).WithMany(p => p.Instructions)
@@ -107,6 +110,14 @@ public partial class HomeHubContext : DbContext
                 .HasDefaultValueSql("'1'")
                 .HasColumnType("int(11)");
             entity.Property(e => e.Type).HasColumnType("int(11)");
+        });
+
+        modelBuilder.Entity<TapoDevice>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("PRIMARY");
+
+            entity.Property(e => e.Id).HasColumnType("int(11)");
+            entity.Property(e => e.IpAddress).HasMaxLength(255);
         });
 
         OnModelCreatingPartial(modelBuilder);
