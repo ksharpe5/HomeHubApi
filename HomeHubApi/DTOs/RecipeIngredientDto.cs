@@ -1,12 +1,11 @@
 namespace HomeHubApi.DTOs;
 
-public class IngredientDto
+public class RecipeIngredientDto
 {
     public int Id { get; set; }
     public int RecipeId { get; set; }
-    
-    public string Name { get; set; } = null!;
-    public float Quantity { get; set; }
+    public ProductDto Product { get; set; } = null!;
+    public decimal QuantityRequired { get; set; }
     public int Unit { get; set; }
     public int SequenceNumber { get; set; }
 }

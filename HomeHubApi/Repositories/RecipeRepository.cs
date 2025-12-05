@@ -9,10 +9,12 @@ namespace HomeHubApi.Repositories;
 
 public class RecipeRepository(HomeHubContext context, IMapper mapper) : IRecipeRepository
 {
+    // Fetch all recipes with ingredients (linked to products) and instructions
     public async Task<IEnumerable<RecipeDto>> GetAll()
     {
         return await context.Recipes
-            .Include(r => r.Ingredients)
+            .Include(r => r.RecipeIngredients)
+                .ThenInclude(ri => ri.Product)
             .Include(r => r.Instructions)
             .ProjectTo<RecipeDto>(mapper.ConfigurationProvider)
             .ToListAsync();
@@ -21,7 +23,8 @@ public class RecipeRepository(HomeHubContext context, IMapper mapper) : IRecipeR
     private async Task<Recipe?> GetById(int id)
     {
         return await context.Recipes
-            .Include(r => r.Ingredients)
+            .Include(r => r.RecipeIngredients)
+                .ThenInclude(ri => ri.Product)
             .Include(r => r.Instructions)
             .FirstOrDefaultAsync(r => r.Id == id);
     }
@@ -29,11 +32,25 @@ public class RecipeRepository(HomeHubContext context, IMapper mapper) : IRecipeR
     public async Task<RecipeDto> Add(RecipeDto dto)
     {
         var entity = mapper.Map<Recipe>(dto);
-        
+
+        // Map RecipeIngredients
+        foreach (var riDto in dto.Ingredients)
+        {
+            var riEntity = mapper.Map<RecipeIngredient>(riDto);
+            riEntity.RecipeId = entity.Id; // ensure FK
+            entity.RecipeIngredients.Add(riEntity);
+        }
+
         context.Recipes.Add(entity);
         await context.SaveChangesAsync();
 
-        return mapper.Map<RecipeDto>(entity);
+        var saved = await context.Recipes
+            .Include(r => r.RecipeIngredients)
+            .ThenInclude(ri => ri.Product)
+            .Include(r => r.Instructions)
+            .FirstAsync(r => r.Id == entity.Id);
+
+        return mapper.Map<RecipeDto>(saved);
     }
 
     public async Task<RecipeDto?> Update(RecipeDto dto)
@@ -41,32 +58,32 @@ public class RecipeRepository(HomeHubContext context, IMapper mapper) : IRecipeR
         var recipe = await GetById(dto.Id);
         if (recipe == null) return null;
 
-        // Map scalar properties (Name, Ratings, etc.) and preserve child collections
+        // Map scalar properties
         mapper.Map(dto, recipe);
 
         // -----------------------------
-        // Sync Ingredients
+        // Sync RecipeIngredients
         // -----------------------------
         // Remove deleted ingredients
-        foreach (var ingredient in recipe.Ingredients
+        foreach (var ingredient in recipe.RecipeIngredients
                      .Where(i => dto.Ingredients.All(d => d.Id != i.Id))
                      .ToList())
         {
-            recipe.Ingredients.Remove(ingredient);
+            recipe.RecipeIngredients.Remove(ingredient);
         }
 
         // Add or update ingredients
         foreach (var ingredientDto in dto.Ingredients)
         {
-            var existing = recipe.Ingredients
+            var existing = recipe.RecipeIngredients
                 .FirstOrDefault(i => i.Id == ingredientDto.Id);
 
             if (existing == null)
             {
                 // New ingredient
-                var newEntity = mapper.Map<Ingredient>(ingredientDto);
+                var newEntity = mapper.Map<RecipeIngredient>(ingredientDto);
                 newEntity.RecipeId = recipe.Id;
-                recipe.Ingredients.Add(newEntity);
+                recipe.RecipeIngredients.Add(newEntity);
             }
             else
             {
@@ -92,14 +109,12 @@ public class RecipeRepository(HomeHubContext context, IMapper mapper) : IRecipeR
 
             if (existing == null)
             {
-                // New instruction
                 var newEntity = mapper.Map<Instruction>(instructionDto);
                 newEntity.RecipeId = recipe.Id;
                 recipe.Instructions.Add(newEntity);
             }
             else
             {
-                // Update existing instruction
                 mapper.Map(instructionDto, existing);
             }
         }

@@ -11,6 +11,6 @@ public class RecipeDto
     public int EffortRating { get; set; }
     public int HealthyRating { get; set; }
 
-    public List<IngredientDto> Ingredients { get; set; } = [];
+    public List<RecipeIngredientDto> Ingredients { get; set; } = [];
     public List<InstructionDto> Instructions { get; set; } = [];
 }

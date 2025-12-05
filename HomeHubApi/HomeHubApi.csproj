@@ -18,10 +18,10 @@
           <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
         <PackageReference Include="Pomelo.EntityFrameworkCore.MySql" Version="9.0.0" />
-        <PackageReference Include="TapoConnect" Version="3.2.4" />
     </ItemGroup>
 
     <ItemGroup>
+      <Folder Include="Clients\" />
       <Folder Include="Data\" />
       <Folder Include="Models\" />
     </ItemGroup>

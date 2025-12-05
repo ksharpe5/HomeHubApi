@@ -21,7 +21,7 @@ public partial class Recipe
 
     public int HealthyRating { get; set; }
 
-    public virtual ICollection<Ingredient> Ingredients { get; set; } = new List<Ingredient>();
-
     public virtual ICollection<Instruction> Instructions { get; set; } = new List<Instruction>();
+
+    public virtual ICollection<RecipeIngredient> RecipeIngredients { get; set; } = new List<RecipeIngredient>();
 }

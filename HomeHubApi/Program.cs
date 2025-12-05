@@ -1,17 +1,11 @@
-using AutoMapper;
 using HomeHubApi.Data;
 using HomeHubApi.DTOs;
 using HomeHubApi.Repositories;
-using HomeHubApi.SettingsModels;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Options;
 
 var builder = WebApplication.CreateBuilder(args);
 
 var connectionString = builder.Configuration.GetConnectionString("HomeHubDB");
-
-builder.Services.Configure<TapoCredentials>(
-    builder.Configuration.GetSection("TapoCredentials"));
 
 builder.Services.AddCors(options =>
 {
@@ -36,7 +30,7 @@ builder.Services.AddDbContext<HomeHubContext>(options =>
     options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString)));
 
 builder.Services.AddScoped<IRecipeRepository, RecipeRepository>();
-builder.Services.AddScoped<ITapoDeviceRepository, TapoDeviceRepository>();
+builder.Services.AddScoped<IProductRepository, ProductRepository>();
 
 var app = builder.Build();
 
@@ -64,7 +58,7 @@ app.MapPost("recipe", async (IRecipeRepository repo, RecipeDto recipe) =>
 app.MapPut("recipe", async (IRecipeRepository repo, RecipeDto recipe) =>
 {
     var result = await repo.Update(recipe);
-    return Results.Ok(result);
+    return result == null ? Results.NotFound() : Results.Ok(result);
 });
 
 app.MapDelete("recipe", async (IRecipeRepository repo, int id) =>
@@ -74,44 +68,36 @@ app.MapDelete("recipe", async (IRecipeRepository repo, int id) =>
 });
 #endregion
 
-#region Tapo Device Endpoints
-app.MapGet("devices", async (ITapoDeviceRepository repo) =>
+#region Product Endpoints
+app.MapGet("product", async (IProductRepository repo) =>
 {
-    var result = (await repo.GetAll()).ToList();
-    
+    var result = await repo.GetAll();
     return Results.Ok(result);
 });
 
-app.MapPost("devices/off", async (ITapoDeviceRepository repo, string ipAddress) =>
+app.MapGet("product/barcode", async (IProductRepository repo, string barcode) =>
 {
-    await repo.TurnOffDevice(ipAddress);
-    return Results.NoContent();
+    var result = await repo.GetByBarcode(barcode);
+    return result == null ? Results.NotFound() : Results.Ok(result);
 });
 
-app.MapPost("devices/on", async (ITapoDeviceRepository repo, string ipAddress) =>
+app.MapPost("product", async (IProductRepository repo, ProductDto product) =>
 {
-    await repo.TurnOnDevice(ipAddress);
-    return Results.NoContent();
+    var result = await repo.Add(product);
+    return Results.Ok(result);
 });
 
-//
-// app.MapPost("devices", async (ITapoDeviceRepository repo, TapoDeviceDto device) =>
-// {
-//     var result = await repo.Add(device);
-//     return Results.Ok(result);
-// });
-//
-// app.MapPut("devices", async (ITapoDeviceRepository repo, TapoDeviceDto device) =>
-// {
-//     var result = await repo.Update(device);
-//     return result is null ? Results.NotFound() : Results.Ok(result);
-// });
-//
-// app.MapDelete("devices", async (ITapoDeviceRepository repo, int id) =>
-// {
-//     var result = await repo.Delete(id);
-//     return Results.Ok(result);
-// });
+app.MapPut("product", async (IProductRepository repo, ProductDto product) =>
+{
+    var result = await repo.Update(product);
+    return result == null ? Results.NotFound() : Results.Ok(result);
+});
+
+app.MapDelete("product", async (IProductRepository repo, int id) =>
+{
+    var result = await repo.Remove(id);
+    return result ? Results.Ok() : Results.NotFound();
+});
 #endregion
 
 app.Run();

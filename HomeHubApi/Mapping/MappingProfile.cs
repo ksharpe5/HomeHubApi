@@ -8,10 +8,24 @@ public class MappingProfile : Profile
 {
     public MappingProfile()
     {
-        CreateMap<Recipe, RecipeDto>().ReverseMap();
-        CreateMap<Ingredient, IngredientDto>().ReverseMap();
+        // Recipe ↔ RecipeDto
+        CreateMap<Recipe, RecipeDto>()
+            .ForMember(dest => dest.Ingredients,
+                opt => opt.MapFrom(src => src.RecipeIngredients))
+            .ReverseMap()
+            .ForMember(dest => dest.RecipeIngredients, opt => opt.Ignore());
+
+        // RecipeIngredient ↔ RecipeIngredientDto
+        CreateMap<RecipeIngredient, RecipeIngredientDto>()
+            .ForMember(dest => dest.Product,
+                opt => opt.MapFrom(src => src.Product))
+            .ReverseMap()
+            .ForMember(dest => dest.Product, opt => opt.Ignore()); // Product navigation handled by FK
+
+        // Product ↔ ProductDto
+        CreateMap<Product, ProductDto>().ReverseMap();
+
+        // Instruction ↔ InstructionDto
         CreateMap<Instruction, InstructionDto>().ReverseMap();
-        
-        CreateMap<TapoDevice, TapoDeviceDto>().ReverseMap();
     }
 }
