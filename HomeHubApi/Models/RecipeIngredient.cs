@@ -12,8 +12,10 @@ public partial class RecipeIngredient
     public int ProductId { get; set; }
 
     public decimal QuantityRequired { get; set; }
-    
+
     public int Unit { get; set; }
+
+    public int SequenceNumber { get; set; }
 
     public virtual Product Product { get; set; } = null!;
 

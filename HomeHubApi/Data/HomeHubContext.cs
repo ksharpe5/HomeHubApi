@@ -20,7 +20,7 @@ public partial class HomeHubContext : DbContext
     public virtual DbSet<CalendarEvent> CalendarEvents { get; set; }
     
     public virtual DbSet<Instruction> Instructions { get; set; }
-    
+
     public virtual DbSet<Product> Products { get; set; }
 
     public virtual DbSet<Recipe> Recipes { get; set; }
@@ -54,7 +54,7 @@ public partial class HomeHubContext : DbContext
             entity.Property(e => e.StartTime).HasColumnType("datetime");
             entity.Property(e => e.TravelTime).HasColumnType("int(11)");
         });
-        
+
         modelBuilder.Entity<Instruction>(entity =>
         {
             entity.HasKey(e => e.Id).HasName("PRIMARY");
@@ -122,8 +122,9 @@ public partial class HomeHubContext : DbContext
             entity.Property(e => e.Id).HasColumnType("int(11)");
             entity.Property(e => e.ProductId).HasColumnType("int(11)");
             entity.Property(e => e.QuantityRequired).HasPrecision(10);
-            entity.Property(e => e.Unit).HasColumnType("int(11)");
             entity.Property(e => e.RecipeId).HasColumnType("int(11)");
+            entity.Property(e => e.SequenceNumber).HasColumnType("int(11)");
+            entity.Property(e => e.Unit).HasColumnType("int(11)");
 
             entity.HasOne(d => d.Product).WithMany(p => p.RecipeIngredients)
                 .HasForeignKey(d => d.ProductId)

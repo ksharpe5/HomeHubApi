@@ -53,6 +53,68 @@ public class RecipeRepository(HomeHubContext context, IMapper mapper) : IRecipeR
         return mapper.Map<RecipeDto>(saved);
     }
 
+    public async Task<RecipeDto?> Copy(int recipeId)
+    {
+        // Load the full recipe graph
+        var recipe = await context.Recipes
+            .Include(r => r.RecipeIngredients)
+            .ThenInclude(ri => ri.Product)
+            .Include(r => r.Instructions)
+            .FirstOrDefaultAsync(r => r.Id == recipeId);
+
+        if (recipe == null)
+            return null;
+
+        // Create a new recipe entity
+        var copy = new Recipe
+        {
+            Name = recipe.Name + " (Copy)",
+            Type = recipe.Type,
+            Serves = recipe.Serves,
+            Duration = recipe.Duration,
+            TasteRating = recipe.TasteRating,
+            EffortRating = recipe.EffortRating,
+            HealthyRating = recipe.HealthyRating,
+
+            RecipeIngredients = new List<RecipeIngredient>(),
+            Instructions = new List<Instruction>()
+        };
+
+        // Copy ingredients (new rows, same product)
+        foreach (var ri in recipe.RecipeIngredients)
+        {
+            copy.RecipeIngredients.Add(new RecipeIngredient
+            {
+                ProductId = ri.ProductId,             // keep the existing product
+                QuantityRequired = ri.QuantityRequired,
+                Unit = ri.Unit,
+                SequenceNumber = ri.SequenceNumber
+            });
+        }
+
+        // Copy instructions
+        foreach (var instr in recipe.Instructions)
+        {
+            copy.Instructions.Add(new Instruction
+            {
+                Text = instr.Text,
+                SequenceNumber = instr.SequenceNumber
+            });
+        }
+
+        // Save new recipe
+        context.Recipes.Add(copy);
+        await context.SaveChangesAsync();
+
+        // Reload with Includes to return full DTO
+        var saved = await context.Recipes
+            .Include(r => r.RecipeIngredients).ThenInclude(ri => ri.Product)
+            .Include(r => r.Instructions)
+            .FirstAsync(r => r.Id == copy.Id);
+
+        return mapper.Map<RecipeDto>(saved);
+    }
+
     public async Task<RecipeDto?> Update(RecipeDto dto)
     {
         var recipe = await GetById(dto.Id);
@@ -138,6 +200,7 @@ public interface IRecipeRepository
 {
     Task<IEnumerable<RecipeDto>> GetAll();
     Task<RecipeDto> Add(RecipeDto recipe);
+    Task<RecipeDto?> Copy(int id);
     Task<RecipeDto?> Update(RecipeDto dto);
     Task<bool> Remove(int id);
 }

@@ -55,6 +55,12 @@ app.MapPost("recipe", async (IRecipeRepository repo, RecipeDto recipe) =>
     return Results.Ok(result);
 });
 
+app.MapPost("recipe/copy", async (IRecipeRepository repo, int id) =>
+{
+    var result = await repo.Copy(id);
+    return result == null ? Results.NotFound() : Results.Ok(result);
+});
+
 app.MapPut("recipe", async (IRecipeRepository repo, RecipeDto recipe) =>
 {
     var result = await repo.Update(recipe);
